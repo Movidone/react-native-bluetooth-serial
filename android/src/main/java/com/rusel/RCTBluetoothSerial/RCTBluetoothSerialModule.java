@@ -339,9 +339,20 @@ public class RCTBluetoothSerialModule extends ReactContextBaseJavaModule impleme
     /**
      * Disconnect from device
      */
-    public void disconnect(Promise promise) {
-        mBluetoothService.stop();
-        promise.resolve(true);
+    public void disconnect(String id, Promise promise) {
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        if (pairedDevices.size() > 0) {
+            for (BluetoothDevice device : pairedDevices) {
+                try {
+                    Method m = device.getClass()
+                            .getMethod("removeBond", (Class[]) null);
+                    m.invoke(device, (Object[]) null);
+                    promise.resolve(true);
+                } catch (Exception e) {
+                    promise.reject(new Exception("Could not disconnect to " + id));
+                }
+            }
+        }
     }
 
     @ReactMethod
